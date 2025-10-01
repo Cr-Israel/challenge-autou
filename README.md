@@ -352,8 +352,8 @@ Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalh
 ## 👨‍💻 Autor
 
 **Israel Alvares**
-- GitHub: [@seu-usuario](https://github.com/seu-usuario)
-- LinkedIn: [seu-perfil](https://linkedin.com/in/seu-perfil)
+- GitHub: [@Cr-Israel](https://github.com/Cr-Israel)
+- LinkedIn: [Carlos Israel](https://www.linkedin.com/in/carlos-israel-64460a227/)
 
 ---
 
