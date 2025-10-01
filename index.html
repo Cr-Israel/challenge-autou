@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+    <html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Classificador de Email & Resposta Automática</title>
+    <meta name="description" content="Faça upload ou cole um email para classificar e obter uma resposta automática." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <div class="title">Classificador de Email & Resposta Automática</div>
+            <div class="subtitle">Faça upload de um arquivo ou cole o texto do email, depois processe.</div>
+          </div>
+        </div>
+      </header>
+
+      <div class="grid">
+        <!-- Input Card -->
+        <section class="card" aria-labelledby="input-section-title">
+          <h2 id="input-section-title" class="section-title">Upload ou Cole Email</h2>
+          <form id="email-form" novalidate>
+            <div class="form-row">
+              <label for="file-input">Upload de arquivo (.txt ou .pdf)</label>
+              <div id="file-drop" class="file-drop" tabindex="0" role="button" aria-label="Arraste seu arquivo aqui ou use o botão escolher arquivo">
+                <span id="file-drop-text">Arraste seu arquivo aqui ou</span>
+                <label for="file-input" class="file-label">Escolher arquivo</label>
+                <input id="file-input" class="file-input" type="file" accept=".txt,.pdf,application/pdf,text/plain" />
+              </div>
+              <div class="hint">Máx 10MB. Suportados: .txt, .pdf</div>
+            </div>
+
+            <div class="divider">ou</div>
+
+            <div class="form-row">
+              <label for="text-input">Cole o texto do email</label>
+              <textarea id="text-input" placeholder="Cole o conteúdo completo do email aqui..."></textarea>
+              <div class="hint">Forneça um arquivo ou texto colado. Apenas um é necessário.</div>
+            </div>
+
+            <div class="actions">
+              <button type="button" id="clear-btn" class="btn btn-secondary">Limpar</button>
+              <button type="submit" id="process-btn" class="btn btn-primary">Processar Email</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Results Card -->
+        <section class="card" aria-labelledby="results-section-title">
+          <h2 id="results-section-title" class="section-title">Resultados</h2>
+          <div id="results" class="result">
+            <div id="category-pill" class="pill">Categoria: —</div>
+
+            <div class="result-body" style="margin-top: 10px;">
+              <div>
+                <div class="hint" style="margin-bottom: 6px;">Categoria Detectada</div>
+                <div id="category-result" class="muted-box">—</div>
+              </div>
+              <div>
+                <div class="hint" style="margin-bottom: 6px;">Resposta Automática Sugerida</div>
+                <div id="reply-result" class="muted-box">—</div>
+              </div>
+            </div>
+          </div>
+          <div id="results-empty" class="hint">Nenhum resultado ainda. Envie um email para ver as previsões.</div>
+        </section>
+      </div>
+
+      <footer>
+        Construído com HTML, CSS e um pouco de JS.
+      </footer>
+    </div>
+
+    <script>
+      (function() {
+        const form = document.getElementById('email-form');
+        const fileInput = document.getElementById('file-input');
+        const textInput = document.getElementById('text-input');
+        const processBtn = document.getElementById('process-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const fileDrop = document.getElementById('file-drop');
+        const fileDropText = document.getElementById('file-drop-text');
+
+        const results = document.getElementById('results');
+        const resultsEmpty = document.getElementById('results-empty');
+        const categoryPill = document.getElementById('category-pill');
+        const categoryResult = document.getElementById('category-result');
+        const replyResult = document.getElementById('reply-result');
+
+        const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+        function resetResults() {
+          results.classList.remove('visible');
+          resultsEmpty.style.display = 'block';
+          categoryPill.className = 'pill';
+          categoryPill.textContent = 'Categoria: —';
+          categoryResult.textContent = '—';
+          replyResult.textContent = '—';
+        }
+
+        function setResults(category, reply) {
+          results.classList.add('visible');
+          resultsEmpty.style.display = 'none';
+          
+          // More explicit check for productive category
+          const isProductive = category && (
+            category.toLowerCase() === 'productive' || 
+            category.toLowerCase() === 'produtivo' ||
+            category.toLowerCase().includes('productive')
+          );
+          
+          categoryPill.className = 'pill ' + (isProductive ? 'success' : 'danger');
+          categoryPill.textContent = 'Categoria: ' + (isProductive ? 'Produtivo' : 'Improdutivo');
+          categoryResult.textContent = isProductive ? 'Produtivo' : 'Improdutivo';
+          replyResult.textContent = reply || '—';
+        }
+
+        function validateInput() {
+          const hasFile = fileInput.files && fileInput.files.length > 0;
+          const hasText = (textInput.value || '').trim().length > 0;
+          if (!hasFile && !hasText) {
+            alert('Por favor, forneça um arquivo .txt/.pdf ou cole o texto do email.');
+            return false;
+          }
+          if (hasFile) {
+            const f = fileInput.files[0];
+            if (f.size > MAX_FILE_SIZE) {
+              alert('Arquivo muito grande. Máx 10MB.');
+              return false;
+            }
+            const allowed = ['text/plain', 'application/pdf'];
+            const nameAllowed = /\.(txt|pdf)$/i.test(f.name);
+            if (!allowed.includes(f.type) && !nameAllowed) {
+              alert('Tipo de arquivo não suportado. Por favor, faça upload de .txt ou .pdf');
+              return false;
+            }
+          }
+          return true;
+        }
+
+        // Drag & drop handling
+        ;['dragenter','dragover'].forEach(evt => {
+          fileDrop.addEventListener(evt, (e) => {
+            e.preventDefault(); e.stopPropagation();
+            fileDrop.classList.add('dragover');
+          });
+        });
+        ;['dragleave','drop'].forEach(evt => {
+          fileDrop.addEventListener(evt, (e) => {
+            e.preventDefault(); e.stopPropagation();
+            fileDrop.classList.remove('dragover');
+          });
+        });
+        fileDrop.addEventListener('drop', (e) => {
+          const dt = e.dataTransfer;
+          if (dt && dt.files && dt.files.length) {
+            fileInput.files = dt.files;
+            fileDropText.textContent = dt.files[0].name;
+          }
+        });
+        fileInput.addEventListener('change', () => {
+          const f = fileInput.files && fileInput.files[0];
+          fileDropText.textContent = f ? f.name : 'Arraste seu arquivo aqui ou';
+        });
+
+        clearBtn.addEventListener('click', () => {
+          form.reset();
+          fileDropText.textContent = 'Arraste seu arquivo aqui ou';
+          resetResults();
+        });
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          if (!validateInput()) return;
+
+          processBtn.disabled = true;
+          processBtn.textContent = 'Processando...';
+
+          try {
+            // Prepare request body
+            // Option A: multipart/form-data (supports file and text)
+            const body = new FormData();
+            if (fileInput.files && fileInput.files.length > 0) {
+              body.append('file', fileInput.files[0]);
+            }
+            const text = (textInput.value || '').trim();
+            if (text) body.append('text', text);
+
+            // Backend API endpoint
+            // const endpoint = 'http://localhost:8000/process_email';
+            const endpoint = 'https://email-classifier-back.onrender.com/process_email';
+
+            // Make API request to backend
+            const response = await fetch(endpoint, { 
+              method: 'POST', 
+              body: body 
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(`Erro do servidor (${response.status}): ${errorText}`);
+            }
+            
+            const data = await response.json();
+            console.log(data)
+            
+            // Handle response from backend
+            const category = data.category; // expected: "Productive" | "Improductive"
+            const reply = data.suggestion;       // expected: string
+            
+            if (!category) {
+              throw new Error('Resposta inválida: categoria ausente');
+            }
+            
+            setResults(category, reply);
+            
+            // Clear form after successful submission
+            form.reset();
+            fileDropText.textContent = 'Arraste seu arquivo aqui ou';
+
+          } catch (err) {
+            alert('Algo deu errado durante o processamento. Por favor, tente novamente.');
+            console.error(err);
+          } finally {
+            processBtn.disabled = false;
+            processBtn.textContent = 'Processar Email';
+          }
+        });
+
+        // Initialize
+        resetResults();
+      })();
+    </script>
+  </body>
+  </html>
