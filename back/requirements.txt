@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+python-dotenv
+langchain==0.3.27
+langchain-openai==0.3.33
+langchain-huggingface
+langchain-core
+nltk
+inflect
+werkzeug
+PyPDF2
+python-multipart

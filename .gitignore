@@ -1,9 +1,11 @@
 # Ignorar ambiente virtual
 .venv/
 venv/
+back/venv/
 
 # Ignorar cache do Python
 __pycache__/
+**/__pycache__/**
 *.pyc
 *.pyo
 *.pyd
@@ -11,3 +13,6 @@ __pycache__/
 # Ignorar arquivos temporários
 *.log
 *.env
+back/.env
+back/uploads/
+back/uploads/**
